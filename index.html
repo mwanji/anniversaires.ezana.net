@@ -93,33 +93,36 @@
 	      },
 	      email: function (email) {
 	        return  { label: "email", value: "mailto:" + email };
+	      },
+	      wa: function () {
+	      	return { label: "whatsapp", value: "" };
 	      }
 	    };
 	  
 	    var people = [
-        newPerson("Rudy", newDate(1985,1,1), 'M', "Olga"),
+        newPerson("Rudy", newDate(1985,1,1), 'M', [], "Olga"),
         newPerson("Olga", newDate(1952,2,16), 'F'),
-        newPerson("Ralph", newDate(1981,2,13), 'M', [urls.twitter("ryfe972"), urls.gPlus("112837247628635935444")], "Olga"),
+        newPerson("Ralph", newDate(1981,2,13), 'M', [urls.twitter("ryfe972"), urls.gPlus("112837247628635935444"), urls.wa()], "Olga"),
         newPerson("Philippe", newDate(1953,7,7), 'M'),
-        newPerson("Thaël", newDate(1978,8,3), 'M', [urls.twitter("ThazLayun"), urls.gPlus("101669048184069624484")], "Philippe et Lulu"),
-        newPerson("Jérémy", newDate(1984,5,29), 'M', [urls.twitter("Jezano"), urls.gPlus("112154776336512995555")], "Philippe et Monique"),
-        newPerson("Jessy", newDate(1987,3,31), 'F', "Philippe et Monique"),
+        newPerson("Thaël", newDate(1978,8,3), 'M', [urls.twitter("ThazLayun"), urls.gPlus("101669048184069624484"), urls.wa()], "Philippe et Lulu"),
+        newPerson("Jérémy", newDate(1984,5,29), 'M', [urls.twitter("Jezano"), urls.gPlus("112154776336512995555"), urls.wa()], "Philippe et Monique"),
+        newPerson("Jessy", newDate(1987,3,31), 'F', [urls.wa()], "Philippe et Monique"),
         newPerson("Alex", newDate(1948,5,23), 'M'),
-        newPerson("Mwanji", newDate(1978,11,11), 'M', [urls.twitter("mwanji"), urls.fb("mwanji"), urls.gPlus("+MoandjiEzana"), urls.email("mwanji@gmail.com")], "Alex et Lise"),
+        newPerson("Mwanji", newDate(1978,11,11), 'M', [urls.twitter("mwanji"), urls.fb("mwanji"), urls.gPlus("+MoandjiEzana"), urls.email("mwanji@gmail.com"), urls.wa()], "Alex et Lise"),
         newPerson("Keziah", newDate(2009,12,10), 'M', [urls.fb("keziahezana"), urls.email("keziah@ezana.net")], "Moandji et Iris"),
-        newPerson("Naïma", newDate(1983,7,22), 'F', [urls.fb("naima.ezana")], "Alex et Lise"),
+        newPerson("Naïma", newDate(1983,7,22), 'F', [urls.fb("naima.ezana"), urls.wa()], "Alex et Lise"),
         newPerson("Marleine", newDate(1949,10,8), 'F'),
-        newPerson("Johann", newDate(1989,11,25), 'M'),
+        newPerson("Johann", newDate(1989,11,25), 'M', [urls.wa()]),
         newPerson("Monique", newDate(1947,3,29), 'F'),
         newPerson("Maryline", newDate(1978,10,30), 'F'),
-        newPerson("Kadiatou Haya", newDate(2009,11,14), 'F', "Maryline et Mamadou"),
+        newPerson("Kadiatou Haya", newDate(2009,11,14), 'F', [], "Maryline et Mamadou"),
         newPerson("Nathalie", newDate(1984,5,17), 'F'),
         newPerson("Myriam", newDate(1986,7,29), 'F'),
         newPerson("Ayanda Lily", newDate(2012, 11, 26), 'F', [urls.fb("AyandaLilyEzana")], "Moandji et Iris"),
-        newPerson("Dalanda Luz", newDate(2013, 5, 2), 'F', "Maryline et Mamadou"),
-        newPerson("Alicia", newDate(2011, 8, 24), 'F', "Jessie"),
+        newPerson("Dalanda Luz", newDate(2013, 5, 2), 'F', [], "Maryline et Mamadou"),
+        newPerson("Alicia", newDate(2011, 8, 24), 'F', [], "Jessie et Mathias"),
         newPerson("Mathys", newDate(2015, 8, 1), 'M'),
-        newPerson("Haydël", newDate(2016, 1, 30), 'M', "Thaël et Lucie"),
+        newPerson("Haydël", newDate(2016, 1, 30), 'M', [], "Thaël et Lucie"),
         newPerson("Seun", newDate(2016, 8, 12), 'M', [], "Naïma et Christian")
 	    ];
       
