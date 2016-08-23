@@ -26,8 +26,8 @@
 	      return aDate.getDate() + "/" + (month) + "/" + aDate.getFullYear();
 	    };
 	    
-	    var getThisYearsBday = function (person) {
-	      var newBday = new Date(person.bday.getTime());
+	    var getThisYearsBday = function (birthday) {
+	      var newBday = new Date(birthday);
 	      newBday.setFullYear(now.getFullYear());
 	      return newBday;
 	    }
@@ -64,6 +64,9 @@
 	    }
 	    
 	    var newPerson = function (name, birthday, gender, _contacts, parents) {
+				var age = now.getFullYear() - birthday.getFullYear();
+				var nextAge = isDatePast(getThisYearsBday(birthday)) ? age + 1 : age;
+
 	      return { 
 	        name: name,
 	        bday: birthday,
@@ -71,13 +74,8 @@
 	        timeToNext: timeToNextBday(birthday),
 	        contacts: _contacts !== undefined ? _contacts : [],
 	        parents: parents,
-	        nextAge: function () {
-	          var age = now.getFullYear() - this.bday.getFullYear();
-	          if (isDatePast(getThisYearsBday(this))) {
-	            age++;
-	          }
-	          return age;
-	        }
+					age: age,
+	        nextAge: nextAge
 	      };
 	    }
 	    
@@ -185,7 +183,7 @@
 	        }
 	        
 	        var contactsDisplay = "";
-	        if (daysToNext <= 30) {
+	        if (daysToNext <= 30 && (person.contacts.length > 0 || person.parents)) {
 	          contactsDisplay += "<div class=\"contacts\">envoyez vos souhaits via ";
 	          if (person.contacts.length > 0) {
   	          for (j = 0; j < person.contacts.length; j++) {
@@ -198,7 +196,7 @@
 	          }
 	          contactsDisplay += "</div>";
 	        }
-	        var newAge = person.nextAge();
+	        var newAge = person.nextAge;
 	        li.innerHTML = "<em>" + person.name + "</em> " + verb + newAge + " an" + (newAge > 1 ? "s " : " ") + qualifier + "</em>" + contactsDisplay;
           li.title = writeFullDate(person.bday);
 	        birthdayContainer.appendChild(li);
