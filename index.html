@@ -66,16 +66,18 @@
 	    var newPerson = function (name, birthday, gender, _contacts, parents) {
 				var age = now.getFullYear() - birthday.getFullYear();
 				var nextAge = isDatePast(getThisYearsBday(birthday)) ? age + 1 : age;
+				var contacts = _contacts !== undefined ? _contacts : [];
 
 	      return { 
 	        name: name,
 	        bday: birthday,
 	        gender: gender,
 	        timeToNext: timeToNextBday(birthday),
-	        contacts: _contacts !== undefined ? _contacts : [],
+	        contacts: contacts,
 	        parents: parents,
 					age: age,
-	        nextAge: nextAge
+	        nextAge: nextAge,
+					canReceiveWishes: contacts.length > 0 || (parents && age < 21)
 	      };
 	    }
 	    
@@ -183,7 +185,7 @@
 	        }
 	        
 	        var contactsDisplay = "";
-	        if (daysToNext <= 30 && (person.contacts.length > 0 || person.parents)) {
+	        if (daysToNext <= 30 && person.canReceiveWishes) {
 	          contactsDisplay += "<div class=\"contacts\">envoyez vos souhaits via ";
 	          if (person.contacts.length > 0) {
   	          for (j = 0; j < person.contacts.length; j++) {
