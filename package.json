@@ -1,0 +1,12 @@
+{
+  "name": "anniversaires.ezana.net",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/mwanji/anniversaires.ezana.net.git",
+  "author": "Mwanji Ezana <mwanji@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "local-web-server": "^4.0.0"
+  }
+}
