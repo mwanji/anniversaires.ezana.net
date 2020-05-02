@@ -2,253 +2,47 @@
 <html> 
 	<head> 
 	  <meta charset="utf-8" /> 
-	  <title>Les anniversaires Ezana</title> 
-	  <script type="text/javascript"> 
-      var now = new Date();
-      var nowTime = now.getTime();
-      var months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-	    
-	    var newDate = function (year, month, day) {
-	      var aDate = new Date();
-	      aDate.setFullYear(year, month - 1, day);
-	      return aDate;
-	    };
-	    
-	    var writeDate = function (aDate) {
-	      return aDate.getDate() + " " + months[aDate.getMonth()];
-	    };
-	    
-	    var writeFullDate = function (aDate) {
-	      var month = aDate.getMonth() + 1;
-	      if (month < 10) {
-	        month = "0" + month;
-	      }
-	      return aDate.getDate() + "/" + (month) + "/" + aDate.getFullYear();
-	    };
-	    
-	    var getThisYearsBday = function (birthday) {
-	      var newBday = new Date(birthday);
-	      newBday.setFullYear(now.getFullYear());
-	      return newBday;
-	    }
-	    
-	    var isDatePast = function (aDate) {
-	      return aDate.getTime() < nowTime;
-	    };
+		<title>Les anniversaires Ezana</title>
+	  <style>
+			:root {
+				--person-padding-y: 0.4rem;
+				--person-padding-x: 0.9rem;
+				--background-color-opacity: 0.6;
+			}
 
-	    var timeToNextBday = function (birthday) {
-	      var nextBday = new Date(birthday);
-	      nextBday.setFullYear(now.getFullYear());
-	      if (isDatePast(nextBday)) {
-	        nextBday.setFullYear(now.getFullYear() + 1);
-	      }
-	      return nextBday.getTime() - nowTime;
-	    }
-	    
-	    var daysToNextBday = function (person) {
-	      return Math.round(person.timeToNext / 86400000);
-	    }
-	    
-	    var readableToNextBday = function (person) {
-	      var days = daysToNextBday(person);
-	      
-	      if (days === 0) return "aujourd'hui!";
-	      if (days === 1) return "demain!";
-	      if (days < 30) return "dans " + days + " jours.";
-	      
-	      var months = Math.round(days / 30)
-	      
-	      if (months < 12) return "dans " + months + " mois.";
-	      
-	      return "dans un an";
-	    }
-	    
-	    var newPerson = function (name, birthday, gender, _contacts, parents) {
-				var age = now.getFullYear() - birthday.getFullYear();
-				var nextAge = isDatePast(getThisYearsBday(birthday)) ? age + 1 : age;
-				var contacts = _contacts !== undefined ? _contacts : [];
-
-	      return { 
-	        name: name,
-	        bday: birthday,
-	        gender: gender,
-	        timeToNext: timeToNextBday(birthday),
-	        contacts: contacts,
-	        parents: parents,
-					age: age,
-	        nextAge: nextAge,
-					canReceiveWishes: contacts.length > 0 || (parents && age < 21)
-	      };
-	    }
-	    
-	    var urls = {
-	      twitter: function (userName) {
-	        return { label: "twitter", value: "http://twitter.com/" + userName };
-	      },
-	      fb: function (userName) {
-	        return { label: "facebook", value: "http://www.facebook.com/" + userName };
-	      },
-	      gPlus: function (userName) {
-	        return { label: "google+", value: "http://plus.google.com/" + userName };
-	      },
-	      email: function (email) {
-	        return  { label: "email", value: "mailto:" + email };
-	      },
-	      wa: function () {
-	      	return { label: "whatsapp", value: "" };
-	      },
-	      site: function (url, label) {
-		return { label: label || "Site", value: "http://" + url };      
-	      }
-	    };
-	  
-	    var people = [
-        newPerson("Rudy", newDate(1985,1,1), 'M', [], "Olga"),
-        newPerson("Olga", newDate(1952,2,16), 'F'),
-        newPerson("Ralph", newDate(1981,2,13), 'M', [urls.twitter("ryfe972"), urls.gPlus("112837247628635935444"), urls.wa()], "Olga"),
-        newPerson("Philippe", newDate(1953,7,7), 'M'),
-        newPerson("Thaël", newDate(1978,8,3), 'M', [urls.twitter("ThazLayun"), urls.gPlus("101669048184069624484"), urls.wa()], "Philippe et Lulu"),
-        newPerson("Jérémy", newDate(1984,5,29), 'M', [urls.twitter("Jezano"), urls.gPlus("112154776336512995555"), urls.wa()], "Philippe et Monique"),
-        newPerson("Jessy", newDate(1987,3,31), 'F', [urls.wa()], "Philippe et Monique"),
-        newPerson("Alex", newDate(1948,5,23), 'M'),
-        newPerson("Mwanji", newDate(1978,11,11), 'M', [urls.twitter("mwanji"), urls.fb("mwanji"), urls.gPlus("+MoandjiEzana"), urls.email("mwanji@gmail.com"), urls.wa()], "Alex et Lise"),
-        newPerson("Keziah", newDate(2009,12,10), 'M', [urls.site("www.keziahezana.com"), urls.fb("keziahezana"), urls.email("keziah@ezana.net")], "Moandji et Iris"),
-        newPerson("Naïma", newDate(1983,7,22), 'F', [urls.fb("naima.ezana"), urls.wa()], "Alex et Lise"),
-        newPerson("Marleine", newDate(1949,10,8), 'F'),
-        newPerson("Johann", newDate(1989,11,25), 'M', [urls.wa()]),
-        newPerson("Monique", newDate(1947,3,29), 'F'),
-        newPerson("Maryline", newDate(1978,10,30), 'F'),
-        newPerson("Kadiatou Haya", newDate(2009,11,14), 'F', [], "Maryline et Mamadou"),
-        newPerson("Nathalie", newDate(1984,5,17), 'F'),
-        newPerson("Myriam", newDate(1986,7,29), 'F'),
-        newPerson("Ayanda Lily", newDate(2012, 11, 26), 'F', [urls.fb("AyandaLilyEzana")], "Moandji et Iris"),
-        newPerson("Dalanda Luz", newDate(2013, 5, 2), 'F', [], "Maryline et Mamadou"),
-        newPerson("Alicia", newDate(2011, 8, 24), 'F', [], "Jessie et Mathias"),
-        newPerson("Mathys", newDate(2015, 8, 1), 'M'),
-        newPerson("Haydël", newDate(2016, 1, 30), 'M', [], "Thaël et Lucie"),
-        newPerson("Seun", newDate(2016, 8, 12), 'M', [], "Naïma et Christian"),
-        newPerson("Moana", newDate(2017, 9, 5), 'F', [urls.site("www.moanaroseezana.com", "Albums")], "Moandji et Iris"),
-        newPerson("David", newDate(2012, 7, 12), 'M', [], "Nathalie"),
-	newPerson("Marlo", newDate(2020, 1, 9), 'M', [], "Ralph et Rexi"),
-	newPerson("Jenna", newDate(2018, 10, 31), 'F', [], "Johann et Claudia"),
-        newPerson("Maïvee", newDate(2020, 3, 23), 'F', [], "Thaël et Lucie"),
-        newPerson("Poety", newDate(2020, 3, 23), 'F', [], "Thaël et Lucie"),
-	newPerson("Ely", newDate(2020, 4, 25), 'F', [], "Jérémy et Béatrice")
-	    ];
-      
-	    var peopleComparator = function (person1, person2) {
-	      var time1 = person1.timeToNext;
-	      var time2 = person2.timeToNext;
-	      
-	      return time1 === time2 ? 0 : (time1 > time2 ? 1 : -1);
-	    };
-	    
-	    var init = function () {
-	      var i;
-	      var birthdayContainer = document.getElementById("birthdayContainer");
-      
-        var debugDiv = document.getElementById('debug');
-        var debug = function (p1, p2) {
-          var debugLi = document.createElement('li');
-          debugLi.innerHTML = p1.name + "-" + p1.timeToNext + " vs. " + p2.name + "-" + p2.timeToNext;
-          debugDiv.appendChild(debugLi);
-        }
-	      
-	      var orderChanged = true;
-	      
-	      // bubble-sort by birthdate
-	      while (orderChanged) {
-	        orderChanged = false;
-	        for (i = 0; i < people.length; i++) {
-	          if (people.length === i + 1) continue;
-	          
-	          if (peopleComparator(people[i], people[i + 1]) <= 0) continue;
-	          
-	          //debug(people[i], people[i + 1]);
-            var tmpPerson = people[i];
-            people[i] = people[i + 1];
-            people[i + 1] = tmpPerson;
-            orderChanged = true;
-	        }
-	      }
-	      
-	      for (i = 0; i < people.length; i++) {
-	        var li = document.createElement("li");
-	        var person = people[i];
-	        var daysToNext = daysToNextBday(person);
-	        
-	        var verb = daysToNext <= 1 ? "a " : "aura ";
-	        var qualifier = " le <em>" + writeDate(person.bday) + "</em>"
-	        if (daysToNext === 0) {
-	          li.className = "bday today";
-	          qualifier = " aujourd'hui!";
-	        } else if (daysToNext === 1) {
-	          li.className = "bday tomorrow";
-	          qualifier = " demain!";
-	        } else if (daysToNext > 1 && daysToNext < 30) {
-	          li.className = "bday verySoon";
-	          qualifier += ", dans " + daysToNext + " jours";
-	        } else if (daysToNext > 90) {
-	          li.className = "lessSoon"
-	        } else if (daysToNext > 180) {
-	          li.className = "distant";
-	        }
-	        
-	        var contactsDisplay = "";
-	        if (daysToNext <= 30 && person.canReceiveWishes) {
-	          contactsDisplay += "<div class=\"contacts\">envoyez vos souhaits via ";
-	          if (person.contacts.length > 0) {
-  	          for (j = 0; j < person.contacts.length; j++) {
-  	            var contact = person.contacts[j];
-  	            contactsDisplay += "<a href=\"" + contact.value + "\">" + contact.label + "</a>";
-  	            if (j < person.contacts.length - 1) contactsDisplay += ", ";
-  	          }
-	          } else if (person.parents) {
-	            contactsDisplay += person.parents;
-	          }
-	          contactsDisplay += "</div>";
-	        }
-	        var newAge = person.nextAge;
-	        li.innerHTML = "<em>" + person.name + "</em> " + verb + newAge + " an" + (newAge > 1 ? "s " : " ") + qualifier + "</em>" + contactsDisplay;
-          li.title = writeFullDate(person.bday);
-	        birthdayContainer.appendChild(li);
-	      }
-	    }
-	  </script> 
-	  <style> 
 	    body {
 	      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+				margin: 10%
 	    }
+
+			button.selected {
+				font-weight: bold;
+			}
 	  
 	    #birthdayContainer {
 	      font-size: 1.5em;
 	      list-style-type: none;
-	      margin: 0px auto;
-	      width: 90%;
       }
+
+			.person {
+				border-radius: 5px;
+				margin-bottom: var(--person-padding-y);
+				padding: var(--person-padding-x);
+				padding-top: var(--person-padding-y);
+				padding-bottom: var(--person-padding-y);
+	      transition: background-color 0.4s linear;
+			}
       
       h1 {
-        font-size: 2.5em;
-        width: 90%;
-        margin: 20px auto;
+        font-size: 2.5rem;
       }
-	    
-	    li {
-	      transition: background-color 0.4s linear;
-	      padding: 5px;
-	      margin: 2px;
-	    }
 	  
-	    li:hover {
-	      background-color: #999;
+	    .person:hover {
+				--background-color-opacity: 1;
 	    }
 	    
 	    em {
 	      font-style: normal;
-	    }
-	    
-	    li:nth-child(1) em, li:nth-child(2) em, li:nth-child(3) em {
-	      font-weight: bold;
 	    }
 	    
 	    footer div {
@@ -257,30 +51,27 @@
 	      font-size: 80%;
 	    }
 	    
-	    .bday {
-        -webkit-border-radius: 5px;
-        -moz-border-radius: 5px;
+	    li {
         border-radius: 5px;
         padding: 15px;
 	    }
       
-      li.bday em {	    
-        font-weight: normal;
-      }
-      
-	    .today {
-	      background-color: green;
+	    div.today {
+	      background-color: rgb(0,128,0, var(--background-color-opacity));
 	      font-size: 220%;
+				--person-padding-y: 1rem;
 	    }
 	    
-	    .tomorrow {
-	      background-color: orangeRed;
+	    div.tomorrow {
+	      background-color: rgb(255, 69, 0, var(--background-color-opacity));
 	      font-size: 170%;
+				--person-padding-y: 0.75rem;
 	    }
 	    
-	    .verySoon {
-	      background-color: orange;
+	    div.verySoon {
+	      background-color: rgb(255, 165, 0, var(--background-color-opacity));
 	      font-size: 130%;
+				--person-padding-y: 0.5rem;
 	    }
 	    
 	    .lessSoon {
@@ -291,6 +82,7 @@
 	    .distant {
 	      font-size: 80%;
 	      color: #444;
+				padding-bottom: 0;
 	    }
 	    
 	    .contacts {
@@ -299,13 +91,19 @@
 	    }
 	  </style> 
 	</head> 
-	<body onload="init()"> 
+	<body> 
 	  <!--ol id="debug"></ol--> 
-	  <h1>Les anniversaires Ezana</h1> 
-		<ul id="birthdayContainer"> 
-		</ul> 
+		<h1>Les anniversaires Ezana</h1> 
+		<div id="views" style="display: flex; justify-content: center;"></div>
+		<div id="filters">
+			<div id="filtersParent" style="margin-bottom: 1rem;"></div>
+			<div id="filtersYear" style="margin-bottom: 1rem;"></div>
+		</div>
+		<div id="birthdayContainer"></div>
 		<footer> 
 		  <div>Créé par <a href="mailto:mwanji@gmail.com">Mwanji</a> et Ralph.</div> 
 		</footer> 
+
+		<script type="module" src="index.js"></script>
 	</body> 
 </html> 
