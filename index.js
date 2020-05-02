@@ -1,8 +1,9 @@
-import {html, render} from "https://unpkg.com/lit-html?module";
-import {repeat} from 'https://unpkg.com/lit-html/directives/repeat?module';
-import {unsafeHTML} from 'https://unpkg.com/lit-html/directives/unsafe-html?module';
-import {addDays, addYears, compareAsc, compareDesc, differenceInCalendarDays, differenceInCalendarYears, differenceInYears, format, formatDistanceToNowStrict, isBefore, isFuture, isPast, isSameDay, isThisYear, isToday, setYear} from 'https://unpkg.com/date-fns@2.12.0?module';
-import {fr} from 'https://unpkg.com/date-fns@2.12.0/esm/locale/index.js?module';
+import {html, render} from "./web_modules/lit-html.js";
+import {repeat} from './web_modules/lit-html/directives/repeat.js';
+import {unsafeHTML} from './web_modules/lit-html/directives/unsafe-html.js';
+import {styleMap} from './web_modules/lit-html/directives/style-map.js';
+import {addDays, addYears, compareAsc, compareDesc, differenceInCalendarDays, differenceInCalendarYears, differenceInYears, format, formatDistanceToNowStrict, isPast, isSameDay, isThisYear, isToday, setYear} from './web_modules/date-fns.js';
+import fr from './web_modules/date-fns/esm/locale/fr/index.js';
 
 const dateFnsOptions = {locale: fr}
 const pluralRules = new Intl.PluralRules('fr');
@@ -64,7 +65,7 @@ class Person {
       return `${this.name} aura ${yearPart} demain !`;
     }
 
-    const birthdayDateFormat = isThisYear(this.birthdayDate) ? 'd MMMM' : 'PP'
+    const birthdayDateFormat = isThisYear(this.birthdayDate) ? 'd MMMM' : 'PPP'
     const phrase = `${this.name} aura ${yearPart} le ${format(this.birthdayDate, birthdayDateFormat, dateFnsOptions)}`
 
     if (daysToBirthday > 30) {
@@ -158,7 +159,17 @@ function parentClickHandler(event) {
     }
   }
   
-  renderPage()
+  renderPage();
+}
+
+function yearsFilterToggle() {
+  yearFiltersState = yearFiltersState === 'closed' ? 'open' : 'closed';
+  renderPage();
+}
+
+function parentsFilterToggle() {
+  parentFiltersState = parentFiltersState === 'closed' ? 'open' : 'closed';
+  renderPage();
 }
 
 function renderPage() {
@@ -167,8 +178,8 @@ function renderPage() {
     .sort(selectedView === 'agenda' ? AGENDA_COMPARATOR : AGE_COMPARATOR);
   render(peopleTemplate(selectedPeople), document.getElementById('birthdayContainer'));
   render(viewsTemplate('agenda'), document.getElementById('views'));
-  render(yearFiltersTemplate(selectedYears), document.getElementById('filtersYear'));
-  render(parentsFilterTemplate(selectedParents), document.getElementById('filtersParent'));
+  render(yearFiltersTemplate(yearFiltersState === 'closed' ? {display: 'none'} : {}), document.getElementById('filtersYear'));
+  render(parentsFilterTemplate(parentFiltersState === 'closed' ? {display: 'none'} : {}), document.getElementById('filtersParent'));
 }
 
 const monique = new Person("Monique", new Date(1947, 2, 29), 'F');
@@ -232,6 +243,9 @@ const allParents = selectedParents = Array.from(people.filter(person => person.p
     parents.add(parent);
     return parents;
   }, new Set()));
+
+let parentFiltersState = 'closed';
+let yearFiltersState = 'closed';
 const contactsTemplate = (person) => html`<div class="contacts">Envoyez vos souhaits via ${person.parent.name}</div>`;
 const personTemplate = person => html`<div title="${dateFormat.format(person.birthDate)}" class="person ${getPersonClasses(person)}">
   ${person.getPhrase()}
@@ -241,8 +255,14 @@ const peopleTemplate = people => html`${repeat(people, person => person.id, pers
 const viewsTemplate = () => html`<button @click=${setAgendaView} class=${selectedView === 'agenda' ? 'selected' : ''} data-view="agenda">Agenda</button><button @click=${setAgeView} class=${selectedView === 'age' ? 'selected' : ''}>Par âge ${unsafeHTML(ageSortOrder === 'asc' ? '&#8593;' : '&#8595;')}</button>`;
 const filterTemplate = (filter, clickHandler, label, selected, value) => html`<button @click=${clickHandler} class=${selected ? 'selected' : ''} data-filter=${filter} data-value=${value}>${label}</button>`;
 const yearFilterTemplate = year => html`${filterTemplate('year', yearClickHandler, year, selectedYears.includes(year), year)}`;
-const yearFiltersTemplate = () => html`${repeat(allYears, y => y, yearFilterTemplate)} ${filterTemplate('year', yearClickHandler, 'x', false, 'clear')} ${filterTemplate('year', yearClickHandler, 'Toutes', false, 'all')}`;
+const yearFiltersTemplate = (styles) => html`<p>Années <button @click=${yearsFilterToggle}>${yearFiltersState === 'closed' ? '+' : '-'}</button></p>
+  <div style=${styleMap(styles)}>
+    ${repeat(allYears, y => y, yearFilterTemplate)} ${filterTemplate('year', yearClickHandler, 'x', false, 'clear')} ${filterTemplate('year', yearClickHandler, 'Toutes', false, 'all')}
+  </div>`;
 const parentFilterTemplate = person => html`${filterTemplate('parent', parentClickHandler, person.name, selectedParents.includes(person), person.id)}`;
-const parentsFilterTemplate = () => html`${repeat(allParents, parent => parent.id, parentFilterTemplate)} ${filterTemplate('parent', parentClickHandler, 'x', false, 'clear')} ${filterTemplate('parent', parentClickHandler, 'Tous', false, 'all')}`;
+const parentsFilterTemplate = (styles) => html`<p>Parents <button @click=${parentsFilterToggle}>${parentFiltersState === 'closed' ? '+' : '-'}</button></p>
+  <div style=${styleMap(styles)}>
+    ${repeat(allParents, parent => parent.id, parentFilterTemplate)} ${filterTemplate('parent', parentClickHandler, 'x', false, 'clear')} ${filterTemplate('parent', parentClickHandler, 'Tous', false, 'all')}
+  </div>`;
 
 renderPage();
