@@ -1,4 +1,4 @@
-import {html, render} from "./web_modules/lit-html.js";
+import {directive, html, render} from "./web_modules/lit-html.js";
 import {repeat} from './web_modules/lit-html/directives/repeat.js';
 import {unsafeHTML} from './web_modules/lit-html/directives/unsafe-html.js';
 import {styleMap} from './web_modules/lit-html/directives/style-map.js';
@@ -9,11 +9,30 @@ const dateFnsOptions = {locale: fr}
 const pluralRules = new Intl.PluralRules('fr');
 const dateFormat = new Intl.DateTimeFormat('fr');
 const NOW = new Date();
+const EZANA = "Ezana";
+const MAIZEROI = "Maizeroi";
+const PASTEL = "Pastel";
+
+const langs = {
+  fr: {
+    age(value) {
+      return value + (pluralRules.select(value) === "one" ? " an" : " ans");
+    },
+    agenda: "Agenda",
+    byYear: "Par âge",
+    parents: "Parents",
+    reset: "Effacer",
+    years: "Années"
+  }
+}
+const lang = langs.fr;
 
 let selectedView = 'agenda';
 let selectedYears = [];
 let selectedParents = [];
 let ageSortOrder = 'asc';
+let selectedFilterCategory = null;
+let menuState = 'closed';
 
 const AGENDA_COMPARATOR = (p1, p2) => {
   return compareAsc(p1.birthdayDate, p2.birthdayDate);
@@ -22,6 +41,10 @@ const AGE_COMPARATOR = (p1, p2) => {
   const cmp = ageSortOrder === 'asc' ? compareDesc : compareAsc;
   return cmp(p1.birthDate, p2.birthDate);
 }
+const p = directive((visible, body) => part => {
+  const template = html`<p class="grid" style=${styleMap({display: visible ? '' : 'none'})}>${body}</p>`;
+  part.setValue(template);
+});
 
 class Person {
   constructor(name, birthDate, gender, parent = null){
@@ -31,7 +54,7 @@ class Person {
     this.gender = gender;
     this.parent = parent;
     this.id = name + '-' + birthDate;
-    this.dateText = format(birthDate, 'P');
+    this.dateText = format(birthDate, 'P', dateFnsOptions);
   }
 
   showContacts() {
@@ -53,8 +76,7 @@ class Person {
   }
 
   getPhrase() {
-    const age = this.getBirthdayAge();
-    const yearPart = `${age} an${pluralRules.select(age) !== "one" ? 's' : ''}`
+    const yearPart = lang.age(this.getBirthdayAge());
     if (isSameDay(NOW, this.birthdayDate)) {
       return `${this.name} a ${yearPart} aujourd'hui !`;
     }
@@ -112,29 +134,25 @@ function getPersonClasses(person) {
   return 'distant';
 }
 
-function setAgendaView() {
-  selectedView = 'agenda';
+function toggleSelectedView(view) {
+  selectedView = view;
   renderPage();
 }
 
 function setAgeView() {
-  if (selectedView !== 'age') {
-    selectedView = 'age';
-  } else {
+  if (selectedView === 'age') {
     ageSortOrder = ageSortOrder === 'asc' ? 'desc' : 'asc';
   }
-  renderPage();
+  toggleSelectedView('age');
 }
 
 function yearClickHandler(event) {
   const filter = event.currentTarget;
   if (filter.dataset.value === 'clear') {
     selectedYears = [];
-  } else if (filter.dataset.value === 'all') {
-    selectedYears = allYears;
   } else {
     const year = parseInt(filter.dataset.value);
-    if (filter.classList.contains('selected')) {
+    if (selectedYears.includes(year)) {
       selectedYears = selectedYears.filter(selectedYear => selectedYear !== year);
     } else {
       selectedYears.push(year)
@@ -148,8 +166,6 @@ function parentClickHandler(event) {
   const filter = event.currentTarget;
   if (filter.dataset.value === 'clear') {
     selectedParents = [];
-  } else if (filter.dataset.value === 'all') {
-    selectedParents = allParents;
   } else {
     const parent = selectedParents.find(selectedParent => selectedParent.id === filter.dataset.value);
     if (parent) {
@@ -162,24 +178,31 @@ function parentClickHandler(event) {
   renderPage();
 }
 
-function yearsFilterToggle() {
-  yearFiltersState = yearFiltersState === 'closed' ? 'open' : 'closed';
+function hasFilters() {
+  return selectedYears.length > 0 || selectedParents.length > 0;
+}
+
+function resetClickHandler() {
+  selectedParents = [];
+  selectedYears = [];
   renderPage();
 }
 
-function parentsFilterToggle() {
-  parentFiltersState = parentFiltersState === 'closed' ? 'open' : 'closed';
+function filterToggle(category) {
+  if (selectedFilterCategory === category) {
+    selectedFilterCategory = null;
+  } else {
+    selectedFilterCategory = category;
+  }
   renderPage();
 }
 
 function renderPage() {
-  const selectedPeople = people.filter(person => selectedYears.includes(person.birthDate.getFullYear()))
-    .filter(person => selectedParents.find(parent => parent === person.parent || parent === person))
+  const selectedPeople = people.filter(person => selectedYears.length === 0 || selectedYears.includes(person.birthDate.getFullYear()))
+    .filter(person => selectedParents.length === 0 || selectedParents.find(parent => parent === person.parent || parent === person))
     .sort(selectedView === 'agenda' ? AGENDA_COMPARATOR : AGE_COMPARATOR);
-  render(peopleTemplate(selectedPeople), document.getElementById('birthdayContainer'));
-  render(viewsTemplate('agenda'), document.getElementById('views'));
-  render(yearFiltersTemplate(yearFiltersState === 'closed' ? {display: 'none'} : {}), document.getElementById('filtersYear'));
-  render(parentsFilterTemplate(parentFiltersState === 'closed' ? {display: 'none'} : {}), document.getElementById('filtersParent'));
+  render(navTemplate(menuState, lang, selectedView, ageSortOrder, selectedFilterCategory), document.querySelector('nav'));
+  render(peopleTemplate(selectedPeople), document.querySelector('main'));
 }
 
 const monique = new Person("Monique", new Date(1947, 2, 29), 'F');
@@ -225,6 +248,7 @@ const people = [
   new Person("Haydël", new Date(2016, 0, 30), 'M', thael),
   new Person("Seun", new Date(2016, 7, 12), 'M', naima),
   new Person("Moana", new Date(2017, 8, 5), 'F', mwanji),
+  new Person("Stéphane", new Date(2018, 2, 6), 'M', jessy),
   new Person("Jenna", new Date(2018, 9, 31), 'F', johann),
   new Person("Marlo", new Date(2020, 0, 9), 'M', ralph),
   new Person("Maïvee", new Date(2020, 2, 23), 'F', thael),
@@ -232,11 +256,11 @@ const people = [
   new Person("Ely", new Date(2020, 3, 25), 'F', jeremy)
 ]
 
-const allYears = selectedYears = Array.from(people.map(person => person.birthDate.getFullYear()).reduce((years, year) => {
+const allYears = Array.from(people.map(person => person.birthDate.getFullYear()).reduce((years, year) => {
   years.add(year);
   return years;
 }, new Set()));
-const allParents = selectedParents = Array.from(people.filter(person => person.parent)
+const allParents = Array.from(people.filter(person => person.parent)
   .map(person => person.parent)
   .sort((p1, p2) => p1.name.localeCompare(p2.name))
   .reduce((parents, parent) => {
@@ -244,25 +268,42 @@ const allParents = selectedParents = Array.from(people.filter(person => person.p
     return parents;
   }, new Set()));
 
-let parentFiltersState = 'closed';
-let yearFiltersState = 'closed';
 const contactsTemplate = (person) => html`<div class="contacts">Envoyez vos souhaits via ${person.parent.name}</div>`;
 const personTemplate = person => html`<div title="${dateFormat.format(person.birthDate)}" class="person ${getPersonClasses(person)}">
   ${person.getPhrase()}
   ${person.showContacts() ? contactsTemplate(person) : ''}
 </div>`;
-const peopleTemplate = people => html`${repeat(people, person => person.id, personTemplate)}`;
-const viewsTemplate = () => html`<button @click=${setAgendaView} class=${selectedView === 'agenda' ? 'selected' : ''} data-view="agenda">Agenda</button><button @click=${setAgeView} class=${selectedView === 'age' ? 'selected' : ''}>Par âge ${unsafeHTML(ageSortOrder === 'asc' ? '&#8593;' : '&#8595;')}</button>`;
-const filterTemplate = (filter, clickHandler, label, selected, value) => html`<button @click=${clickHandler} class=${selected ? 'selected' : ''} data-filter=${filter} data-value=${value}>${label}</button>`;
-const yearFilterTemplate = year => html`${filterTemplate('year', yearClickHandler, year, selectedYears.includes(year), year)}`;
-const yearFiltersTemplate = (styles) => html`<p>Années <button @click=${yearsFilterToggle}>${yearFiltersState === 'closed' ? '+' : '-'}</button></p>
-  <div style=${styleMap(styles)}>
-    ${repeat(allYears, y => y, yearFilterTemplate)} ${filterTemplate('year', yearClickHandler, 'x', false, 'clear')} ${filterTemplate('year', yearClickHandler, 'Toutes', false, 'all')}
-  </div>`;
-const parentFilterTemplate = person => html`${filterTemplate('parent', parentClickHandler, person.name, selectedParents.includes(person), person.id)}`;
-const parentsFilterTemplate = (styles) => html`<p>Parents <button @click=${parentsFilterToggle}>${parentFiltersState === 'closed' ? '+' : '-'}</button></p>
-  <div style=${styleMap(styles)}>
-    ${repeat(allParents, parent => parent.id, parentFilterTemplate)} ${filterTemplate('parent', parentClickHandler, 'x', false, 'clear')} ${filterTemplate('parent', parentClickHandler, 'Tous', false, 'all')}
-  </div>`;
+const peopleTemplate = people => repeat(people, person => person.id, personTemplate);
+const filterTemplate = (filter, clickHandler, label, selected, value) => html`<button @click=${clickHandler} class="${selected ? 'selected' : ''}" data-filter=${filter} data-value=${value}>${label}</button>`;
+const filterCategoryTemplate = (category, label, selectedFilterCategory) => html`<button @click=${filterToggle.bind(null, category)} class="${selectedFilterCategory === category ? 'selected' : ''}" data-filter-category=${category}>${label}</button>`;
+const yearFilterTemplate = year => filterTemplate('year', yearClickHandler, year, selectedYears.includes(year), year);
+const yearFiltersTemplate = (selectedFilterCategory) => p(selectedFilterCategory === 'year', repeat(allYears, y => y, yearFilterTemplate));
+const parentFilterTemplate = person => filterTemplate('parent', parentClickHandler, person.name, selectedParents.includes(person), person.id);
+const parentsFilterTemplate = (selectedFilterCategory) => p(selectedFilterCategory === 'parent', repeat(allParents, parent => parent.id, parentFilterTemplate));
+
+const badgeTemplate = (clickHandler, value, label = value) => html`<span class="badge" @click=${clickHandler} data-value=${value}>${label} x</span>`
+const menuTemplate = (lang, view, ageSortOrder, category) => html`
+  <p style="display: flex; justify-content: center;">
+    <button @click=${toggleSelectedView.bind(null, 'agenda')} class="${view === 'agenda' ? 'selected' : ''}">${lang.agenda}</button>
+    <button @click=${setAgeView} class="${view === 'age' ? 'selected' : ''}">${lang.byYear} ${unsafeHTML(ageSortOrder === 'asc' ? '&#8593;' : '&#8595;')}</button>
+  </p>
+  <div id="selected-values">
+    ${p(selectedYears.length > 0, repeat(selectedYears, y => y, year => badgeTemplate(yearClickHandler, year)))}
+    ${p(selectedParents.length > 0, repeat(selectedParents, parent => parent.id, parent => badgeTemplate(parentClickHandler, parent.id, parent.name)))}
+  </div>
+  <p>
+    ${filterCategoryTemplate("year", lang.years, category)}
+    ${filterCategoryTemplate("parent", lang.parents, category)}
+    ${hasFilters() ? filterTemplate("reset", resetClickHandler, lang.reset, false, "reset") : ''}
+  </p>
+  ${parentsFilterTemplate(category)}
+  ${yearFiltersTemplate(category)}
+`;
+const navTemplate = (navState, lang, view, ageSortOrder, category) => html`${navState === 'open' ? menuTemplate(lang, view, ageSortOrder, category) : ''}`;
+
+document.getElementById('menu-button').addEventListener('click', () => {
+  menuState = menuState === 'open' ? 'closed' : 'open';
+  renderPage();
+})
 
 renderPage();

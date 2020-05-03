@@ -1,29 +1,78 @@
 <!DOCTYPE html> 
-<html> 
+<html lang="fr"> 
 	<head> 
-	  <meta charset="utf-8" /> 
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Les anniversaires Ezana</title>
+		<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"> -->
 	  <style>
 			:root {
 				--person-padding-y: 0.4rem;
 				--person-padding-x: 0.9rem;
 				--background-color-opacity: 0.6;
+				--button-padding: 1rem;
+				--button-margin: 0.7rem;
+				--grid-column-count: 3;
+				--badge-margin: 0.3rem;
 			}
 
-	    body {
-	      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-				margin: 1rem;
-				margin-top: 0;
-	    }
+			body {
+				color: #222222;
+				font-size: 1em;
+			  line-height: 1.4;
+				font-family: -apple-system, BlinkMacSystemFont,
+					"Segoe UI", "Roboto", "Oxygen",
+					"Ubuntu", "Cantarell", "Fira Sans",
+					"Droid Sans", "Helvetica Neue", sans-serif;
+			}
+
+			button {
+				background-color: transparent;
+				border: 1px solid #999999;
+				border-radius: 1rem;
+				cursor: pointer;
+				flex-grow: 1;
+				padding: var(--button-padding);
+				margin-left: var(--button-margin);
+			}
 
 			button.selected {
 				font-weight: bold;
 			}
-	  
-	    #birthdayContainer {
-	      font-size: 1.5em;
-	      list-style-type: none;
-      }
+
+			* > button:first-child {
+				margin-left: 0;
+			}
+
+			div[data-filter-category]:not(.selected) {
+				display: none;
+			}
+
+			button[data-filter="reset"] {
+				background-color: rgba(255, 0, 0, 0.6);
+				color: #ffffff;
+				border-color: rgba(255, 0, 0, 0.8);
+			}
+
+			/* Inspired by https://github.com/Heydon/fukol-grids */
+			#selected-values p.grid {
+				display: flex;
+				flex-wrap: wrap;
+				margin: calc(var(--badge-margin) * -1);
+			}
+
+			#selected-values p.grid > * {
+				flex: 0 0 5em; /* flex-grow set to 0 to minimise badge size */
+				margin: var(--badge-margin);
+			}
+
+			.badge {
+				border-radius: 5px;
+				background-color: #dddddd;
+				cursor: pointer;
+				padding: 0.3rem;
+				text-align: center;
+			}
 
 			.person {
 				border-radius: 5px;
@@ -33,76 +82,73 @@
 				padding-bottom: var(--person-padding-y);
 	      transition: background-color 0.4s linear;
 			}
-      
-      h1 {
-        font-size: 2.5rem;
-      }
 	  
 	    .person:hover {
 				--background-color-opacity: 1;
 	    }
 	    
-	    em {
-	      font-style: normal;
-	    }
-	    
-	    footer div {
-	      margin-top: 50px;
-	      color: #333;
-	      font-size: 80%;
-	    }
-	    
-	    li {
-        border-radius: 5px;
-        padding: 15px;
+	    footer {
+	      margin-top: calc(var(--person-padding-y) * 4);
+				color: #666666;
 	    }
       
+			.grid {
+				display: grid;
+				grid-template-columns: repeat(var(--grid-column-count), 1fr);
+				column-gap: 0.3rem;
+				row-gap: 0.3rem;
+				--button-margin: 0;
+			}
+
+			@media only screen and (min-width: 45em) {
+				.grid {
+					--grid-column-count: 4;
+				}
+			}
+
+			@media only screen and (min-width: 65em) {
+				.grid {
+					--grid-column-count: 5;
+				}
+			}
+
 	    div.today {
 	      background-color: rgb(0,128,0, var(--background-color-opacity));
-	      font-size: 220%;
 				--person-padding-y: 1rem;
 	    }
 	    
 	    div.tomorrow {
 	      background-color: rgb(255, 69, 0, var(--background-color-opacity));
-	      font-size: 170%;
 				--person-padding-y: 0.75rem;
 	    }
 	    
 	    div.verySoon {
 	      background-color: rgb(255, 165, 0, var(--background-color-opacity));
-	      font-size: 130%;
 				--person-padding-y: 0.5rem;
 	    }
 	    
 	    .lessSoon {
-	      font-size: 90%;
-	      color: #222;
 	    }
 	    
 	    .distant {
-	      font-size: 80%;
-	      color: #444;
 				padding-bottom: 0;
 	    }
 	    
 	    .contacts {
 	      font-size: 70%;
-	      padding-left: 20px;
+	      padding-left: 1rem;
 	    }
 	  </style> 
 	</head> 
-	<body> 
-	  <!--ol id="debug"></ol--> 
-		<h1>Les anniversaires Ezana</h1> 
-		<div id="views" style="display: flex; justify-content: center;"></div>
-		<div id="filters">
-			<div id="filtersParent" style="margin-bottom: 1rem;"></div>
-			<div id="filtersYear" style="margin-bottom: 1rem;"></div>
-		</div>
-		<div id="birthdayContainer"></div>
+	<body>
+		<section style="display: flex; align-items: baseline;">
+			<h1 style="flex-grow: 1;">Les anniversaires Ezana</h1>
+			<button id="menu-button" style="flex: 0 1; padding: 0.3rem;">...</button>
+		</section>
+		<nav></nav>
+		<main></main>
 		<footer> 
-		  <div>Créé par <a href="mailto:mwanji@gmail.com">Mwanji</a> et Ralph.</div> 
+		  Créé par Mwanji et Ralph. 
 		</footer> 
 
 		<script type="module" src="index.js"></script>
