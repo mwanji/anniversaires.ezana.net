@@ -253,7 +253,9 @@ const people = [
   new Person("Marlo", new Date(2020, 0, 9), 'M', ralph),
   new Person("Maïvee", new Date(2020, 2, 23), 'F', thael),
   new Person("Poety", new Date(2020, 2, 23), 'F', thael),
-  new Person("Ely", new Date(2020, 3, 25), 'F', jeremy)
+  new Person("Ely", new Date(2020, 3, 25), 'F', jeremy),
+  new Person("Luana Nour", new Date(2021, 4, 20, 'F', naima),
+  new Person("James Hector", new Date(2022, 4, 7, 'M', rudy)
 ]
 
 const allYears = Array.from(people.map(person => person.birthDate.getFullYear()).reduce((years, year) => {
