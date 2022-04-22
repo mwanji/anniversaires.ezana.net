@@ -1,6 +1,5 @@
 import {directive, html, render} from "./web_modules/lit-html.js";
 import {repeat} from './web_modules/lit-html/directives/repeat.js';
-import {unsafeHTML} from './web_modules/lit-html/directives/unsafe-html.js';
 import {styleMap} from './web_modules/lit-html/directives/style-map.js';
 import {addDays, addYears, compareAsc, compareDesc, differenceInCalendarDays, differenceInCalendarYears, differenceInYears, format, formatDistanceToNowStrict, isPast, isSameDay, isThisYear, isToday, setYear} from './web_modules/date-fns.js';
 import fr from './web_modules/date-fns/esm/locale/fr/index.js';
@@ -9,17 +8,12 @@ const dateFnsOptions = {locale: fr}
 const pluralRules = new Intl.PluralRules('fr');
 const dateFormat = new Intl.DateTimeFormat('fr');
 const NOW = new Date();
-const EZANA = "Ezana";
-const MAIZEROI = "Maizeroi";
-const PASTEL = "Pastel";
 
 const langs = {
   fr: {
     age(value) {
       return value + (pluralRules.select(value) === "one" ? " an" : " ans");
     },
-    agenda: "Agenda",
-    byYear: "Par âge",
     parents: "Parents",
     reset: "Effacer",
     years: "Années"
@@ -32,7 +26,7 @@ let selectedYears = [];
 let selectedParents = [];
 let ageSortOrder = 'asc';
 let selectedFilterCategory = null;
-let menuState = 'closed';
+let query = null;
 
 const AGENDA_COMPARATOR = (p1, p2) => {
   return compareAsc(p1.birthdayDate, p2.birthdayDate);
@@ -134,18 +128,6 @@ function getPersonClasses(person) {
   return 'distant';
 }
 
-function toggleSelectedView(view) {
-  selectedView = view;
-  renderPage();
-}
-
-function setAgeView() {
-  if (selectedView === 'age') {
-    ageSortOrder = ageSortOrder === 'asc' ? 'desc' : 'asc';
-  }
-  toggleSelectedView('age');
-}
-
 function yearClickHandler(event) {
   const filter = event.currentTarget;
   if (filter.dataset.value === 'clear') {
@@ -197,11 +179,21 @@ function filterToggle(category) {
   renderPage();
 }
 
+function search(event) {
+  query = event.target.value;
+  if (query.trim() === '') {
+    query = null;
+  }
+  renderPage();
+}
+
 function renderPage() {
-  const selectedPeople = people.filter(person => selectedYears.length === 0 || selectedYears.includes(person.birthDate.getFullYear()))
+  const selectedPeople = people
+    .filter(person => query === null || person.name.toLowerCase().includes(query.toLowerCase()))
+    .filter(person => selectedYears.length === 0 || selectedYears.includes(person.birthDate.getFullYear()))
     .filter(person => selectedParents.length === 0 || selectedParents.find(parent => parent === person.parent || parent === person))
     .sort(selectedView === 'agenda' ? AGENDA_COMPARATOR : AGE_COMPARATOR);
-  render(navTemplate(menuState, lang, selectedView, ageSortOrder, selectedFilterCategory), document.querySelector('nav'));
+  render(menuTemplate(lang, selectedFilterCategory), document.querySelector('person-filters'));
   render(peopleTemplate(selectedPeople), document.querySelector('main'));
 }
 
@@ -256,17 +248,17 @@ const people = [
   new Person("Ely", new Date(2020, 3, 25), 'F', jeremy)
 ]
 
-const allYears = Array.from(people.map(person => person.birthDate.getFullYear()).reduce((years, year) => {
-  years.add(year);
-  return years;
-}, new Set()));
-const allParents = Array.from(people.filter(person => person.parent)
-  .map(person => person.parent)
-  .sort((p1, p2) => p1.name.localeCompare(p2.name))
-  .reduce((parents, parent) => {
-    parents.add(parent);
-    return parents;
-  }, new Set()));
+const allYears = Array.from(
+  new Set(
+    people.map(person => person.birthDate.getFullYear())
+  )
+);
+const allParents = Array.from(
+  new Set(
+    people.filter(person => person.parent)
+      .map(person => person.parent)
+  )
+).sort((p1, p2) => p1.name.localeCompare(p2.name));
 
 const contactsTemplate = (person) => html`<div class="contacts">Envoyez vos souhaits via ${person.parent.name}</div>`;
 const personTemplate = person => html`<div title="${dateFormat.format(person.birthDate)}" class="person ${getPersonClasses(person)}">
@@ -274,36 +266,61 @@ const personTemplate = person => html`<div title="${dateFormat.format(person.bir
   ${person.showContacts() ? contactsTemplate(person) : ''}
 </div>`;
 const peopleTemplate = people => repeat(people, person => person.id, personTemplate);
-const filterTemplate = (filter, clickHandler, label, selected, value) => html`<button @click=${clickHandler} class="${selected ? 'selected' : ''}" data-filter=${filter} data-value=${value}>${label}</button>`;
-const filterCategoryTemplate = (category, label, selectedFilterCategory) => html`<button @click=${filterToggle.bind(null, category)} class="${selectedFilterCategory === category ? 'selected' : ''}" data-filter-category=${category}>${label}</button>`;
+const filterTemplate = (filter, clickHandler, label, selected, value) => html`<button @click=${clickHandler} aria-selected="${selected}" data-filter="${filter}" data-value="${value}">${label}</button>`;
+const filterCategoryTemplate = (category, label, selectedFilterCategory) => html`<button @click=${filterToggle.bind(null, category)} aria-selected="${selectedFilterCategory === category}" data-filter-category=${category}>${label}</button>`;
 const yearFilterTemplate = year => filterTemplate('year', yearClickHandler, year, selectedYears.includes(year), year);
 const yearFiltersTemplate = (selectedFilterCategory) => p(selectedFilterCategory === 'year', repeat(allYears, y => y, yearFilterTemplate));
 const parentFilterTemplate = person => filterTemplate('parent', parentClickHandler, person.name, selectedParents.includes(person), person.id);
 const parentsFilterTemplate = (selectedFilterCategory) => p(selectedFilterCategory === 'parent', repeat(allParents, parent => parent.id, parentFilterTemplate));
 
 const badgeTemplate = (clickHandler, value, label = value) => html`<span class="badge" @click=${clickHandler} data-value=${value}>${label} x</span>`
-const menuTemplate = (lang, view, ageSortOrder, category) => html`
-  <p style="display: flex; justify-content: center;">
-    <button @click=${toggleSelectedView.bind(null, 'agenda')} class="${view === 'agenda' ? 'selected' : ''}">${lang.agenda}</button>
-    <button @click=${setAgeView} class="${view === 'age' ? 'selected' : ''}">${lang.byYear} ${unsafeHTML(ageSortOrder === 'asc' ? '&#8593;' : '&#8595;')}</button>
-  </p>
+const menuTemplate = (lang, category) => html`
   <div id="selected-values">
     ${p(selectedYears.length > 0, repeat(selectedYears, y => y, year => badgeTemplate(yearClickHandler, year)))}
     ${p(selectedParents.length > 0, repeat(selectedParents, parent => parent.id, parent => badgeTemplate(parentClickHandler, parent.id, parent.name)))}
   </div>
-  <p>
+  <div>
     ${filterCategoryTemplate("year", lang.years, category)}
     ${filterCategoryTemplate("parent", lang.parents, category)}
     ${hasFilters() ? filterTemplate("reset", resetClickHandler, lang.reset, false, "reset") : ''}
-  </p>
+  </div>
   ${parentsFilterTemplate(category)}
   ${yearFiltersTemplate(category)}
 `;
-const navTemplate = (navState, lang, view, ageSortOrder, category) => html`${navState === 'open' ? menuTemplate(lang, view, ageSortOrder, category) : ''}`;
 
-document.getElementById('menu-button').addEventListener('click', () => {
-  menuState = menuState === 'open' ? 'closed' : 'open';
-  renderPage();
-})
+document.body.querySelector('details input[type="search"]').addEventListener('input', search)
+
+class ViewSelector extends HTMLElement {
+  constructor() {
+    super();
+    this.addEventListener('click', event => {
+      const button = event.target.closest('button');
+
+      if (button) {
+        for (const child of this.children) {
+          const wasSelected = child.getAttribute('aria-selected');
+          child.setAttribute('aria-selected', child === button);
+          if (child.hasAttribute('data-direction')) {
+            if (wasSelected && child.getAttribute('aria-selected') === 'true') {
+              child.setAttribute('data-direction', child.getAttribute('data-direction') === 'asc' ? 'desc' : 'asc')
+            } else if (wasSelected) {
+              child.setAttribute('data-direction', 'none');
+            } else {
+              child.setAttribute('data-direction', 'asc');
+            }
+          }
+        }
+
+        selectedView = button.dataset.view;
+        if (button.hasAttribute('data-direction')) {
+          ageSortOrder = button.getAttribute('data-direction');
+        }
+        renderPage();
+      }
+    })
+  }
+}
+
+customElements.define('view-selector', ViewSelector)
 
 renderPage();
