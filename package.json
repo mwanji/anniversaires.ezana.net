@@ -6,9 +6,12 @@
   "author": "Mwanji Ezana <mwanji@gmail.com>",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "start": "ws --http2"
+  },
   "devDependencies": {
-    "local-web-server": "^4.0.0",
-    "snowpack": "^1.7.1"
+    "local-web-server": "5.2.0",
+    "snowpack": "1.7.1"
   },
   "dependencies": {
     "date-fns": "2.12.0",
