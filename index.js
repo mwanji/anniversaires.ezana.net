@@ -1,13 +1,16 @@
 import {directive, html, render} from "./web_modules/lit-html.js";
 import {repeat} from './web_modules/lit-html/directives/repeat.js';
 import {styleMap} from './web_modules/lit-html/directives/style-map.js';
-import {addDays, addYears, compareAsc, compareDesc, differenceInCalendarDays, differenceInCalendarYears, differenceInYears, format, formatDistanceToNowStrict, isPast, isSameDay, isThisYear, isToday, setYear} from './web_modules/date-fns.js';
+import dayjs from './web_modules/dayjs/esm/index.js';
+import './web_modules/dayjs/esm/locale/fr.js'
 import fr from './web_modules/date-fns/esm/locale/fr/index.js';
+
+dayjs.locale('fr')
 
 const dateFnsOptions = {locale: fr}
 const pluralRules = new Intl.PluralRules('fr');
 const dateFormat = new Intl.DateTimeFormat('fr');
-const NOW = new Date();
+const NOW = dayjs().startOf('day');
 
 const langs = {
   fr: {
@@ -29,11 +32,10 @@ let selectedFilterCategory = null;
 let query = null;
 
 const AGENDA_COMPARATOR = (p1, p2) => {
-  return compareAsc(p1.birthdayDate, p2.birthdayDate);
+  return p1.birthdayDate.diff(p2.birthdayDate);
 };
 const AGE_COMPARATOR = (p1, p2) => {
-  const cmp = ageSortOrder === 'asc' ? compareDesc : compareAsc;
-  return cmp(p1.birthDate, p2.birthDate);
+  return p1.birthDate.diff(p2.birthDate) * (ageSortOrder === 'asc' ? 1 : -1);
 }
 const p = directive((visible, body) => part => {
   const template = html`<p class="grid" style=${styleMap({display: visible ? '' : 'none'})}>${body}</p>`;
@@ -43,71 +45,64 @@ const p = directive((visible, body) => part => {
 class Person {
   constructor(name, birthDate, gender, parent = null){
     this.name = name;
-    this.birthDate = birthDate;
-    this.birthdayDate = getNextBirthdayDate(birthDate);
+    this.birthDate = dayjs(birthDate);
+    this.birthdayDate = this.#getNextBirthdayDate(this.birthDate);
     this.gender = gender;
     this.parent = parent;
     this.id = name + '-' + birthDate;
-    this.dateText = format(birthDate, 'P', dateFnsOptions);
   }
 
   showContacts() {
-    return differenceInCalendarDays(this.birthdayDate, NOW) <= 30 && (this.getBirthdayAge() < 21);
+    return this.birthdayDate.diff(NOW, 'day') <= 30 && (this.getBirthdayAge() < 21);
   }
 
   getCurrentAge() {
-    return differenceInYears(new Date(), this.birthDate)
+    return NOW.diff(this.birthDate, 'years');
   }
 
   getBirthdayAge() {
-    const date = this.birthDate;
-    const age = differenceInCalendarYears(NOW, date);
-    if (isToday(this.birthdayDate) || isThisYear(this.birthdayDate)) {
-      return age;
-    }
-
-    return age + 1;
+    return this.getCurrentAge() + 1;
   }
 
   getPhrase() {
     const yearPart = lang.age(this.getBirthdayAge());
-    if (isSameDay(NOW, this.birthdayDate)) {
+    if (this.birthdayDate.isSame(NOW, 'day')) {
       return `${this.name} a ${yearPart} aujourd'hui !`;
     }
 
-    const daysToBirthday = differenceInCalendarDays(this.birthdayDate, NOW);
+    const daysToBirthday = this.birthdayDate.diff(NOW, 'days');
     
     if (daysToBirthday === 1) {
       return `${this.name} aura ${yearPart} demain !`;
     }
 
-    const birthdayDateFormat = isThisYear(this.birthdayDate) ? 'd MMMM' : 'PPP'
-    const phrase = `${this.name} aura ${yearPart} le ${format(this.birthdayDate, birthdayDateFormat, dateFnsOptions)}`
+    const birthdayDateFormat = this.birthdayDate.isSame(NOW, 'year') ? 'D MMMM' : 'D MMMM YYYY'
+    const phrase = `${this.name} aura ${yearPart} le ${this.birthdayDate.format(birthdayDateFormat)}`
 
     if (daysToBirthday > 30) {
       return phrase;
     }
 
-    return phrase + `, dans ${formatDistanceToNowStrict(this.birthdayDate, {locale: fr, roundingMethod: "ceil"})}`
-  }
-}
-
-function getNextBirthdayDate(birthDate) {
-  const birthdayDate = setYear(birthDate, NOW.getFullYear());
-
-  if (isPast(addDays(birthdayDate, 1))) {
-    return addYears(birthdayDate, 1)
+    return phrase + `, dans ${this.birthdayDate.diff(NOW, 'days')} jours`
   }
 
-  return birthdayDate;
+  #getNextBirthdayDate(birthDate) {
+    const birthdayDate = birthDate.year(NOW.year());
+  
+    if (birthdayDate.add(1, 'day').isBefore(NOW)) {
+      return birthdayDate.add(1, 'year');
+    }
+  
+    return birthdayDate;
+  }
 }
 
 function getPersonClasses(person) {
-  if (isToday(person.birthdayDate)) {
+  if (person.birthdayDate.isSame(NOW, 'day')) {
     return 'today';
   }
 
-  const daysToBirthday = differenceInCalendarDays(person.birthdayDate, NOW);
+  const daysToBirthday = person.birthdayDate.diff(NOW, 'days');
 
   if (daysToBirthday === 1) {
     return 'tomorrow';
@@ -190,7 +185,7 @@ function search(event) {
 function renderPage() {
   const selectedPeople = people
     .filter(person => query === null || person.name.toLowerCase().includes(query.toLowerCase()))
-    .filter(person => selectedYears.length === 0 || selectedYears.includes(person.birthDate.getFullYear()))
+    .filter(person => selectedYears.length === 0 || selectedYears.includes(person.birthDate.year()))
     .filter(person => selectedParents.length === 0 || selectedParents.find(parent => parent === person.parent || parent === person))
     .sort(selectedView === 'agenda' ? AGENDA_COMPARATOR : AGE_COMPARATOR);
   render(menuTemplate(lang, selectedFilterCategory), document.querySelector('person-filters'));
@@ -252,7 +247,7 @@ const people = [
 
 const allYears = Array.from(
   new Set(
-    people.map(person => person.birthDate.getFullYear())
+    people.map(person => person.birthDate.year())
   )
 );
 const allParents = Array.from(
