@@ -1,13 +1,9 @@
-import {directive, html, render} from "./web_modules/lit-html.js";
+import {directive, html, render} from './web_modules/lit-html.js';
 import {repeat} from './web_modules/lit-html/directives/repeat.js';
 import {styleMap} from './web_modules/lit-html/directives/style-map.js';
 import dayjs from './web_modules/dayjs/esm/index.js';
 import './web_modules/dayjs/esm/locale/fr.js'
-import fr from './web_modules/date-fns/esm/locale/fr/index.js';
 
-dayjs.locale('fr')
-
-const dateFnsOptions = {locale: fr}
 const pluralRules = new Intl.PluralRules('fr');
 const dateFormat = new Intl.DateTimeFormat('fr');
 const NOW = dayjs().startOf('day');
