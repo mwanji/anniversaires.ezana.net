@@ -4,6 +4,8 @@ import {styleMap} from './web_modules/lit-html/directives/style-map.js';
 import dayjs from './web_modules/dayjs/esm/index.js';
 import './web_modules/dayjs/esm/locale/fr.js'
 
+dayjs.locale('fr');
+
 const pluralRules = new Intl.PluralRules('fr');
 const dateFormat = new Intl.DateTimeFormat('fr');
 const NOW = dayjs().startOf('day');
