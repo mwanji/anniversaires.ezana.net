@@ -33,7 +33,7 @@ const AGENDA_COMPARATOR = (p1, p2) => {
   return p1.birthdayDate.diff(p2.birthdayDate);
 };
 const AGE_COMPARATOR = (p1, p2) => {
-  return p1.birthDate.diff(p2.birthDate) * (ageSortOrder === 'asc' ? 1 : -1);
+  return p1.birthDate.diff(p2.birthDate) * (ageSortOrder === 'asc' ? -1 : 1);
 }
 const p = directive((visible, body) => part => {
   const template = html`<p class="grid" style=${styleMap({display: visible ? '' : 'none'})}>${body}</p>`;
@@ -298,10 +298,10 @@ class ViewSelector extends HTMLElement {
           if (child.hasAttribute('data-direction')) {
             if (wasSelected && child.getAttribute('aria-selected') === 'true') {
               child.setAttribute('data-direction', child.getAttribute('data-direction') === 'asc' ? 'desc' : 'asc')
-            } else if (wasSelected) {
-              child.setAttribute('data-direction', 'none');
-            } else {
+            } else if (child.getAttribute('aria-selected') === 'true') {
               child.setAttribute('data-direction', 'asc');
+            } else {
+              child.setAttribute('data-direction', 'none');
             }
           }
         }
