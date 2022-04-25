@@ -51,19 +51,11 @@ class Person {
   }
 
   showContacts() {
-    return this.birthdayDate.diff(NOW, 'day') <= 30 && (this.getBirthdayAge() < 21);
-  }
-
-  getCurrentAge() {
-    return NOW.diff(this.birthDate, 'years');
-  }
-
-  getBirthdayAge() {
-    return this.getCurrentAge() + 1;
+    return this.birthdayDate.diff(NOW, 'day') <= 30 && (this.#getBirthdayAge() < 21);
   }
 
   getPhrase() {
-    const yearPart = lang.age(this.getBirthdayAge());
+    const yearPart = lang.age(this.#getBirthdayAge());
     if (this.birthdayDate.isSame(NOW, 'day')) {
       return `${this.name} a ${yearPart} aujourd'hui !`;
     }
@@ -82,6 +74,14 @@ class Person {
     }
 
     return phrase + `, dans ${this.birthdayDate.diff(NOW, 'days')} jours`
+  }
+
+  #getCurrentAge() {
+    return NOW.diff(this.birthDate, 'years');
+  }
+
+  #getBirthdayAge() {
+    return NOW.isSame(this.birthdayDate) ? this.#getCurrentAge() : this.#getCurrentAge() + 1;
   }
 
   #getNextBirthdayDate(birthDate) {
