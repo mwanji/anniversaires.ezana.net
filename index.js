@@ -87,11 +87,11 @@ class Person {
   #getNextBirthdayDate(birthDate) {
     const birthdayDate = birthDate.year(NOW.year());
   
-    if (birthdayDate.add(1, 'day').isBefore(NOW)) {
-      return birthdayDate.add(1, 'year');
+    if (NOW.isSame(birthdayDate, 'day') || NOW.isBefore(birthdayDate, 'day')) {
+      return birthdayDate;
     }
-  
-    return birthdayDate;
+    
+    return birthdayDate.add(1, 'year');
   }
 }
 
