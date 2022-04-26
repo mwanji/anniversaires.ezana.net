@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "ws --http2"
+    "start": "ws --http2 --port 8001"
   },
   "devDependencies": {
     "local-web-server": "5.2.0"
